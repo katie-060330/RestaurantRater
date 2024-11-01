@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import {
-    getFirestore, collection, getDocs, 
+    getFirestore, collection, getDocs, getDoc,
     addDoc, deleteDoc, doc, 
     onSnapshot, 
     query, where
@@ -27,21 +27,42 @@ const firebaseConfig = {
   //? Registering users to the databse 
 
   const registerFrom = document.querySelector('.register')
-  registerFrom.addEventListener('submit', (e) =>{
+  registerFrom.addEventListener('submit', async (e) =>{
     e.preventDefault(); 
     //TODO check to see if the user is already rediterd if so do not allow the register of the user
+    if(!( await checkIfUserExists(registerFrom.email.value))){
+      addDoc(colRef,{
+        firstName: registerFrom.firstName.value,
+        lastName: registerFrom.lastName.value, 
+        email: registerFrom.email.value, 
+        password: registerFrom.password.value
+      } )
+      .then(()=>{
+        //TODO send the user to the home page 
+        registerFrom.reset();
+      })
 
-    addDoc(colRef,{
-      firstName: registerFrom.firstName.value,
-      lastName: registerFrom.lastName.value, 
-      email: registerFrom.email.value, 
-      password: registerFrom.password.value
-    } )
-    .then(()=>{
-      //TODO send the user to the home page 
-      registerFrom.reset();
-    })
+    }
+    else{
+      console.log('User already exist');
+    }
+
+    
   })
+
+async function checkIfUserExists(email){
+  const userRef = doc(db, "users", email)
+  const userSanp = await getDoc(userRef)
+
+  if(userSanp.exists()){
+    console.log('user exists');
+    return true; 
+  }
+  else{
+    console.log('no such user add to databse');
+    return false;
+  }
+}
 
   // const addBookForm = document.querySelector('.add')
 // addBookForm.addEventListener('submit', (e) => {
