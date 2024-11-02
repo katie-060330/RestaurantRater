@@ -3,7 +3,8 @@ import {
     getFirestore, collection, getDocs, getDoc,
     addDoc, deleteDoc, doc, 
     onSnapshot, 
-    query, where
+    query, where,
+    QuerySnapshot
 } from 'firebase/firestore'
 
 const firebaseConfig = {
@@ -38,7 +39,7 @@ const firebaseConfig = {
         password: registerFrom.password.value
       } )
       .then(()=>{
-        //TODO send the user to the home page 
+        window.location.href = 'home.html';
         registerFrom.reset();
       })
 
@@ -46,24 +47,65 @@ const firebaseConfig = {
     else{
       console.log('User already exist');
     }
-
-    
+   
   })
 
 async function checkIfUserExists(email){
-  const userRef = doc(db, "users", email)
-  const userSanp = await getDoc(userRef)
+  const usersQuery = query(collection(db, "users"), where("email", "==", email));
+  const querySnapshot = await getDocs(usersQuery)
 
-  if(userSanp.exists()){
+  if(!querySnapshot.empty){
     console.log('user exists');
     return true; 
   }
   else{
-    console.log('no such user add to databse');
+    console.log('no such user add to database');
     return false;
   }
 }
 
+const loginForm = document.querySelector(".loginForm"); 
+loginForm.addEventListener('submit', async (e) =>{
+  e.preventDefault();
+  if(checkIfUserExists(loginForm.email.value)){
+    verifyUserInput(loginForm.email.value, loginForm.password.value); 
+    //TODO verify that teh user is the right pass word and email 
+    //TODO send email to the next html page 
+  }
+  else{
+    console.log('you dont have an account with this email ');
+  }
+ 
+})
+
+const verifyUserInput = async (email, pw) =>{
+  const usersQuery = query(collection(db, "users"), where("email", "==", email));
+  const querySnapShot = await getDocs(usersQuery); 
+  for(let doc of querySnapShot.docs){
+    if(doc.data().password === pw){
+
+      console.log(doc.data());
+      return true; 
+
+    }
+    else{
+      console.log('Invalid input ');
+      return false; 
+    }
+    
+
+  }
+  
+
+
+  // if(querySnapShot.password == pw){
+  //   return true; 
+  // }
+  // else{
+  //   return false; 
+  // }
+
+}
   // const addBookForm = document.querySelector('.add')
 // addBookForm.addEventListener('submit', (e) => {
 //   e.preventDefault()
